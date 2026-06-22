@@ -7,6 +7,8 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "seed": "node scripts/seedAdmin.js",
+    "seed:doctors": "node scripts/seedDoctors.js",
+    "token": "node scripts/generateToken.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
