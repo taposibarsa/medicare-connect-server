@@ -3,7 +3,7 @@ const Doctor = require('../models/Doctor');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const { getDoctorByUserId } = require('../utils/doctorHelpers');
-const { isSlotTaken } = require('../utils/appointmentHelpers');
+const { isSlotTaken, normalizeToUtcDay } = require('../utils/appointmentHelpers');
 
 const populateOptions = [
   { path: 'patientId', select: 'name email photo' },
@@ -98,10 +98,12 @@ const createAppointment = asyncHandler(async (req, res) => {
     throw new AppError('This time slot is already booked', 409);
   }
 
+  const { start: normalizedDate } = normalizeToUtcDay(appointmentDate);
+
   const appointment = await Appointment.create({
     patientId: req.user.id,
     doctorId,
-    appointmentDate,
+    appointmentDate: normalizedDate,
     appointmentTime,
     symptoms: symptoms || '',
     paymentStatus: 'paid',
@@ -145,7 +147,9 @@ const rescheduleAppointment = asyncHandler(async (req, res) => {
     throw new AppError('This time slot is already booked', 409);
   }
 
-  appointment.appointmentDate = appointmentDate;
+  const { start: normalizedDate } = normalizeToUtcDay(appointmentDate);
+
+  appointment.appointmentDate = normalizedDate;
   appointment.appointmentTime = appointmentTime;
   await appointment.save();
 

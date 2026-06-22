@@ -10,6 +10,7 @@
     "seed:doctors": "node scripts/seedDoctors.js",
     "seed:patient": "node scripts/seedPatient.js",
     "token": "node scripts/generateToken.js",
+    "test:phase2": "node scripts/testPhase2.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

@@ -35,6 +35,16 @@ const updateMe = asyncHandler(async (req, res) => {
     throw new AppError('User not found', 404);
   }
 
+  const protectedFields = ['role', 'email', 'status', 'password'];
+  const attemptedProtected = protectedFields.filter((field) => req.body[field] !== undefined);
+
+  if (attemptedProtected.length > 0) {
+    throw new AppError(
+      `Cannot update protected fields: ${attemptedProtected.join(', ')}`,
+      400
+    );
+  }
+
   const allowedFields = ['name', 'photo', 'phone', 'gender'];
 
   allowedFields.forEach((field) => {

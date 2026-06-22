@@ -2,7 +2,11 @@ const mongoose = require('mongoose');
 const Doctor = require('../models/Doctor');
 
 const getDoctorByUserId = async (userId) => {
-  return Doctor.findOne({ userId });
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return null;
+  }
+
+  return Doctor.findOne({ userId: new mongoose.Types.ObjectId(userId) });
 };
 
 const buildMatchFilter = (baseFilter = {}, search) => {

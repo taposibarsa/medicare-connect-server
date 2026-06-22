@@ -1,9 +1,23 @@
+const mongoose = require('mongoose');
 const Appointment = require('../models/Appointment');
 
+const normalizeToUtcDay = (dateInput) => {
+  const d = new Date(dateInput);
+  const start = new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0)
+  );
+  const end = new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999)
+  );
+  return { start, end };
+};
+
 const isSlotTaken = async (doctorId, appointmentDate, appointmentTime, excludeId = null) => {
+  const { start, end } = normalizeToUtcDay(appointmentDate);
+
   const filter = {
     doctorId,
-    appointmentDate: new Date(appointmentDate),
+    appointmentDate: { $gte: start, $lte: end },
     appointmentTime,
     appointmentStatus: { $nin: ['cancelled', 'rejected'] },
   };
@@ -16,19 +30,7 @@ const isSlotTaken = async (doctorId, appointmentDate, appointmentTime, excludeId
   return Boolean(existing);
 };
 
-const canAccessAppointment = (appointment, user) => {
-  if (user.role === 'admin') {
-    return true;
-  }
-
-  if (user.role === 'patient' && appointment.patientId.toString() === user.id) {
-    return true;
-  }
-
-  return false;
-};
-
 module.exports = {
+  normalizeToUtcDay,
   isSlotTaken,
-  canAccessAppointment,
 };
