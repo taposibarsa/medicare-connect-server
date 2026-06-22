@@ -1,10 +1,11 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-
-const SALT_ROUNDS = 12;
+const {
+  syncBetterAuthCredential,
+  syncBetterAuthUserFields,
+} = require('./utils/betterAuthSeed');
 
 const seedAdmin = async () => {
   const email = process.env.ADMIN_EMAIL;
@@ -25,8 +26,6 @@ const seedAdmin = async () => {
     await mongoose.connect(uri);
     console.log('Connected to MongoDB for seeding');
 
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-
     const admin = await User.findOneAndUpdate(
       { email: email.toLowerCase() },
       {
@@ -34,7 +33,6 @@ const seedAdmin = async () => {
         email: email.toLowerCase(),
         role: 'admin',
         status: 'active',
-        password: hashedPassword,
         emailVerified: true,
       },
       {
@@ -44,10 +42,17 @@ const seedAdmin = async () => {
       }
     );
 
+    const db = mongoose.connection.db;
+    await syncBetterAuthUserFields(db, admin);
+
+    const { created } = await syncBetterAuthCredential(db, admin._id, password);
+
     console.log('Admin user seeded successfully');
     console.log(`  Email: ${admin.email}`);
     console.log(`  Role:  ${admin.role}`);
+    console.log(`  Better Auth credential: ${created ? 'created' : 'updated'}`);
     console.log('  Password: (set via ADMIN_PASSWORD in .env)');
+    console.log('\nYou can now sign in at /login with these credentials.');
   } catch (error) {
     console.error('Seed failed:', error.message);
     process.exit(1);
