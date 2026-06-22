@@ -2,6 +2,11 @@ const errorHandler = (err, req, res, next) => {
   let statusCode = err.statusCode || 500;
   let message = err.message || 'Internal Server Error';
 
+  if (err.name === 'AppError') {
+    statusCode = err.statusCode;
+    message = err.message;
+  }
+
   if (err.name === 'ValidationError') {
     statusCode = 400;
     message = Object.values(err.errors)
