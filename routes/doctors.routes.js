@@ -13,6 +13,18 @@ const {
 const router = express.Router();
 
 router.get('/featured', doctorsController.getFeaturedDoctors);
+router.get(
+  '/admin',
+  verifyJWT,
+  authorizeRoles('admin'),
+  doctorsController.listAdminDoctors
+);
+router.get(
+  '/me',
+  verifyJWT,
+  authorizeRoles('doctor'),
+  doctorsController.getMyDoctor
+);
 router.get('/', listDoctorsRules, validate, doctorsController.listDoctors);
 router.get('/:id', doctorIdParam, validate, doctorsController.getDoctorById);
 

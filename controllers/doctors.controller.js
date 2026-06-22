@@ -48,6 +48,41 @@ const getDoctorById = asyncHandler(async (req, res) => {
   });
 });
 
+const getMyDoctor = asyncHandler(async (req, res) => {
+  const doctor = await getDoctorByUserId(req.user.id);
+
+  if (!doctor) {
+    throw new AppError('Doctor profile not found', 404);
+  }
+
+  const data = await findDoctorByIdWithRatings(doctor._id.toString(), { includeUnverified: true });
+
+  res.status(200).json({
+    success: true,
+    data,
+  });
+});
+
+const listAdminDoctors = asyncHandler(async (req, res) => {
+  const { status } = req.query;
+  const filter = {};
+
+  if (status) {
+    filter.verificationStatus = status;
+  }
+
+  const result = await findDoctorsWithRatings({
+    filter,
+    page: 1,
+    limit: 100,
+  });
+
+  res.status(200).json({
+    success: true,
+    ...result,
+  });
+});
+
 const createDoctor = asyncHandler(async (req, res) => {
   const existing = await getDoctorByUserId(req.user.id);
 
@@ -171,6 +206,8 @@ module.exports = {
   listDoctors,
   getFeaturedDoctors,
   getDoctorById,
+  getMyDoctor,
+  listAdminDoctors,
   createDoctor,
   updateDoctor,
   verifyDoctor,

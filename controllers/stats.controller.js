@@ -24,10 +24,26 @@ const getStats = asyncHandler(async (req, res) => {
 });
 
 const getAdminAnalytics = asyncHandler(async (req, res) => {
-  const [totalPatients, totalDoctors, totalAppointments, doctorPerformance] = await Promise.all([
+  const Payment = require('../models/Payment');
+
+  const [
+    totalPatients,
+    totalDoctors,
+    totalAppointments,
+    pendingDoctorCount,
+    totalRevenueResult,
+    appointmentStatusBreakdown,
+    doctorPerformance,
+  ] = await Promise.all([
     User.countDocuments({ role: 'patient' }),
     Doctor.countDocuments({ verificationStatus: 'verified' }),
     Appointment.countDocuments(),
+    Doctor.countDocuments({ verificationStatus: 'pending' }),
+    Payment.aggregate([{ $group: { _id: null, total: { $sum: '$amount' } } }]),
+    Appointment.aggregate([
+      { $group: { _id: '$appointmentStatus', count: { $sum: 1 } } },
+      { $project: { _id: 0, status: '$_id', count: 1 } },
+    ]),
     Review.aggregate([
       {
         $group: {
@@ -57,12 +73,25 @@ const getAdminAnalytics = asyncHandler(async (req, res) => {
     ]),
   ]);
 
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setUTCHours(23, 59, 59, 999);
+
+  const todaysAppointments = await Appointment.countDocuments({
+    appointmentDate: { $gte: todayStart, $lte: todayEnd },
+  });
+
   res.status(200).json({
     success: true,
     data: {
       totalPatients,
       totalDoctors,
       totalAppointments,
+      pendingDoctorCount,
+      todaysAppointments,
+      totalRevenue: totalRevenueResult[0]?.total || 0,
+      appointmentStatusBreakdown,
       doctorPerformance,
     },
   });

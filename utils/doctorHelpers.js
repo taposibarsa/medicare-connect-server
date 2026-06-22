@@ -101,18 +101,21 @@ const findFeaturedDoctors = async (limit = 6) => {
   );
 };
 
-const findDoctorByIdWithRatings = async (doctorId) => {
+const findDoctorByIdWithRatings = async (doctorId, { includeUnverified = false } = {}) => {
   if (!mongoose.Types.ObjectId.isValid(doctorId)) {
     return null;
   }
 
+  const match = {
+    _id: new mongoose.Types.ObjectId(doctorId),
+  };
+
+  if (!includeUnverified) {
+    match.verificationStatus = 'verified';
+  }
+
   const results = await Doctor.aggregate([
-    {
-      $match: {
-        _id: new mongoose.Types.ObjectId(doctorId),
-        verificationStatus: 'verified',
-      },
-    },
+    { $match: match },
     {
       $lookup: {
         from: 'reviews',
