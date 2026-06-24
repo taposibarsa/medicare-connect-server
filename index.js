@@ -7,6 +7,7 @@ const errorHandler = require('./middleware/errorHandler');
 const verifyJWT = require('./middleware/verifyJWT');
 const authorizeRoles = require('./middleware/authorizeRoles');
 const statsController = require('./controllers/stats.controller');
+const paymentsController = require('./controllers/payments.controller');
 
 const authRoutes = require('./routes/auth.routes');
 const doctorsRoutes = require('./routes/doctors.routes');
@@ -26,6 +27,13 @@ app.use(
     credentials: true,
   })
 );
+
+app.post(
+  '/api/payments/webhook',
+  express.raw({ type: 'application/json' }),
+  paymentsController.handleWebhook
+);
+
 app.use(express.json());
 
 app.get('/api/health', (req, res) => {

@@ -42,5 +42,6 @@ paymentSchema.index({ patientId: 1 });
 paymentSchema.index({ doctorId: 1 });
 paymentSchema.index({ appointmentId: 1 });
 paymentSchema.index({ paymentDate: -1 });
+paymentSchema.index({ transactionId: 1 }, { unique: true });
 
 module.exports = mongoose.model('Payment', paymentSchema);
